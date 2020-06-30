@@ -11,7 +11,7 @@ import autopy
 import json
 import io
 
-with io.open('resources\\vninfo.json', encoding='utf-8') as vnjsonfile:
+with io.open('resources/vninfo.json', encoding='utf-8') as vnjsonfile:
     vnjsonstructure = json.load(vnjsonfile)
 
 main_window_title = vnjsonstructure['main window title']
