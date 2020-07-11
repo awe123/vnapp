@@ -26,7 +26,7 @@
 "screen_bitmap_scanner_thread_interval" : 2,
 "pos x serverslist wnd" : 300,
 "pos y serverslist wnd" : 0,
-"pos x cmd launch wnd" : 750,
+"pos x cmd launch wnd" : 921,
 "pos y cmd launch wnd" : 0,
 "cmd window color" : "1B",
 "checkbox button width" : 15,
@@ -36,6 +36,7 @@
 "buttons margin y" : 5,
 "radiobuttons width" : 120,
 "radiobuttons height" : 25,
+"default radiobutton" : 20101,
 "1 линия" :
 	[
 	1792,	["Малиновка 1",				"10.99.30.1 -t",	"Малиновка 1"],
