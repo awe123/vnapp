@@ -46,8 +46,8 @@ font_size = vnjsonstructure['font size']
 font_name = vnjsonstructure['font name']
 font_weight = vnjsonstructure['font weight']
 # clock popup width and height
-clockwnd_width = vnjsonstructure['clock popup rect'][0]
-clockwnd_height = vnjsonstructure['clock popup rect'][1]
+clockwnd_width = vnjsonstructure['clockpopup rect'][0]
+clockwnd_height = vnjsonstructure['clockpopup rect'][1]
 # buttons width, height in main window - clock, cmd, servers
 toolbar_button_size_x = vnjsonstructure['toolbar width']
 toolbar_button_size_y = vnjsonstructure['toolbar height']
@@ -64,8 +64,8 @@ if autopy.bitmap.capture_screen().count_of_bitmap(autopy.bitmap.Bitmap.open(line
     # str_buttontext - button text in servers popup window
     servers_nested_list_data = vnjsonstructure['1 линия']
     # servers popup window size, different for each line
-    serverswnd_width = vnjsonstructure['servers popup rect 1 line'][0]
-    serverswnd_height = vnjsonstructure['servers popup rect 1 line'][1]
+    serverswnd_width = vnjsonstructure['serverspopup rect 1 line'][0]
+    serverswnd_height = vnjsonstructure['serverspopup rect 1 line'][1]
     # assign bitmap 16x16 for server status not connected, different png for each line
     icon_connected = icon_connected1
     icon_notconnected = icon_notconnected1
@@ -75,8 +75,8 @@ if autopy.bitmap.capture_screen().count_of_bitmap(autopy.bitmap.Bitmap.open(line
 elif autopy.bitmap.capture_screen().count_of_bitmap(autopy.bitmap.Bitmap.open(line2_detector_png),
                                                     rect=((1, 83), (634, 174))) > 0:
     servers_nested_list_data = vnjsonstructure['2 линия']
-    serverswnd_width = vnjsonstructure['servers popup rect 2 line'][0]
-    serverswnd_height = vnjsonstructure['servers popup rect 2 line'][1]
+    serverswnd_width = vnjsonstructure['serverspopup rect 2 line'][0]
+    serverswnd_height = vnjsonstructure['serverspopup rect 2 line'][1]
     icon_connected = icon_connected2
     icon_notconnected = icon_notconnected2
     allservers_bitmap = autopy.bitmap.Bitmap.open(line2_allservers_png)
@@ -171,12 +171,15 @@ class TBBUTTON(ctypes.Structure):
 class CreateCmdProcess():
     """launch popup cmd shell with ping ip -t"""
 
-    def __init__(self, station="", ip=""):
+    def __init__(self, station="", ip="", exec="", pwrcfgcmdtitle=""):
         super(CreateCmdProcess, self).__init__()
+        self.pwrcfgcmdtitle = pwrcfgcmdtitle
+        self.exec = exec
         self.station = station
         self.ip = ip
 
     def createwnd(self, station, ip):
+        # https://ss64.com/nt/cmd.html
         # structure of cmd shell variables
         cmdsettings = win32process.STARTUPINFO()
         # set not default appearance of window
@@ -190,15 +193,90 @@ class CreateCmdProcess():
             # 0A 1B https://ss64.com/nt/color.html
             None, None, False, win32con.CREATE_NEW_CONSOLE, None, None, cmdsettings)
 
+    def set_power_configuration(self, commandstringexec, pwrcfgcmdtitle):
+        cmdsettings = win32process.STARTUPINFO()
+        cmdsettings.dwX = cmdwnd_x_pos
+        cmdsettings.dwY = cmdwnd_y_pos
+        cmdsettings.lpTitle = pwrcfgcmdtitle
+        return win32process.CreateProcess(
+            "C:\\Windows\\System32\\cmd.exe",
+            "cmd.exe /c COLOR " + cmd_wnd_color + " && " + commandstringexec,
+            # 0A 1B https://ss64.com/nt/color.html
+            None, None, False, (win32con.CREATE_NEW_CONSOLE | win32con.CREATE_NO_WINDOW), None, None, cmdsettings)
+
+
 
 class ToolbarButton():
     """main window "toolbar" buttons Clock, Cmd, Servers functionality if buttons pressed"""
 
-    def __init__(self, title="", station="", ip=""):
+    def __init__(self, title="", station="", ip="", hWndToolbar="", tbbut_id=""):
         super(ToolbarButton, self).__init__()
+        self.tbbut_id = tbbut_id
         self.title = title
         self.station = station
         self.ip = ip
+        self.hWndToolbar = hWndToolbar
+
+
+    def store_hWndToolbar(self, hWndToolbar):
+        global hWndToolbar_value
+        hWndToolbar_value = hWndToolbar
+        # print("i am in ToolbarButton().store_hWndToolbar(hWndToolbar) hWndToolbar =", hWndToolbar_value)
+
+    def toggledaynight(self, tbbut_id):
+        toolbar_button_state = win32gui.SendMessage(hWndToolbar_value, commctrl.TB_GETSTATE, tbbut_id, 0)
+
+        # if toolbar_button_state == 5:
+        #    print ("pressed")
+        # elif toolbar_button_state == 4:
+        #    print("freed")
+
+        if toolbar_button_state == commctrl.TBSTATE_ENABLED:
+            # balanced
+            win32gui.SendMessage(hWndToolbar_value, commctrl.TB_CHANGEBITMAP, 14, 4)
+            CreateCmdProcess().set_power_configuration(commandstringexec='powercfg /s 381b4222-f694-41f0-9685-ff5bb260df2e', pwrcfgcmdtitle ='balanced')
+        elif toolbar_button_state == (commctrl.TBSTATE_CHECKED | commctrl.TBSTATE_ENABLED):
+            # economy
+            win32gui.SendMessage(hWndToolbar_value, commctrl.TB_CHANGEBITMAP, 14, 5)
+            CreateCmdProcess().set_power_configuration(commandstringexec='powercfg /s a1841308-3541-4fab-bc81-f71556f20b4a', pwrcfgcmdtitle='economy')
+
+
+        """
+            def get_hWndToolbar(self):
+                return hWndToolbar_value
+            # hwnd_toolbar = ToolbarButton().get_hWndToolbar()
+                        
+            bk = win32gui.SendMessage(hwnd_toolbar, commctrl.TB_BUTTONCOUNT , 0, 0)
+            # print(bk)
+
+            # https://docs.microsoft.com/en-us/windows/win32/controls/tb-getbutton
+
+            # win32gui.SendMessage(hwnd_toolbar, commctrl.TB_PRESSBUTTON, 13, 1)
+
+            gs = win32gui.SendMessage(hwnd_toolbar, commctrl.TB_GETSTATE, 14, 0)
+
+            #print(gs) # 5 or 4
+
+            #if gs == 5:
+            #    print ("pressed")
+            #elif gs == 4:
+            #    print("freed")
+
+            if gs == commctrl.TBSTATE_ENABLED:
+                print("freed")
+            elif gs == (commctrl.TBSTATE_CHECKED | commctrl.TBSTATE_ENABLED):
+                print ("pressed")
+
+            #print(commctrl.TBSTATE_CHECKED)
+            #print(commctrl.TBSTATE_ELLIPSES)
+            #print(commctrl.TBSTATE_ENABLED)
+            #print(commctrl.TBSTATE_HIDDEN)
+            #print(commctrl.TBSTATE_INDETERMINATE)
+            #print(commctrl.TBSTATE_MARKED)
+            #print(commctrl.TBSTATE_PRESSED)
+            #print(commctrl.TBSTATE_WRAP)
+
+        """
 
     # toggle hide/show windows Clock, Servers
     def toggleshow(self, title):
@@ -215,6 +293,8 @@ class ToolbarButton():
             ind = stations_list.index(station)
             ip = ip_list[ind]
             CreateCmdProcess().createwnd(station, ip)
+
+
 
 
 class ClockPopup():
@@ -452,6 +532,7 @@ class TextOnScreen():
 
 # main script for winapi creating windows and threads
 def main():
+    """main class"""
     """**********************************************************************
     *              MAIN WINDOW INIT
     **********************************************************************"""
@@ -574,9 +655,33 @@ def main():
     tbButtons.iBitmap = toolbarBitmap
     tbButtons.idCommand = 13
     tbButtons.fsState = commctrl.TBSTATE_ENABLED | commctrl.TBSTATE_WRAP
-    tbButtons.fsStyle = commctrl.BTNS_BUTTON  # | commctrl.BTNS_WHOLEDROPDOWN
+    tbButtons.fsStyle = commctrl.BTNS_BUTTON
     win32gui.SendMessage(hWndToolbar, commctrl.TB_ADDBUTTONS, 1, tbButtons)
+    # Toolbar button 4
+    hBitmap = win32gui.LoadImage(0, toolbar_image_path["powercfg_default"], win32gui.IMAGE_BITMAP, toolbar_button_size_x,
+                                 toolbar_button_size_y,
+                                 win32gui.LR_LOADFROMFILE)
+    toolbarBitmap = win32gui.ImageList_Add(hImageList, hBitmap, 0)
+    tbButtons.iBitmap = toolbarBitmap
+    tbButtons.idCommand = 14
+    tbButtons.fsState = commctrl.TBSTATE_ENABLED | commctrl.TBSTATE_WRAP
+    tbButtons.fsStyle = commctrl.BTNS_CHECK
+    win32gui.SendMessage(hWndToolbar, commctrl.TB_ADDBUTTONS, 1, tbButtons)
+
+    hBitmap = win32gui.LoadImage(0, toolbar_image_path["powercfg_day"], win32gui.IMAGE_BITMAP,
+                                 toolbar_button_size_x,
+                                 toolbar_button_size_y,
+                                 win32gui.LR_LOADFROMFILE)
+    win32gui.ImageList_Add(hImageList, hBitmap, 0)
+    hBitmap = win32gui.LoadImage(0, toolbar_image_path["powercfg_night"], win32gui.IMAGE_BITMAP,
+                                 toolbar_button_size_x,
+                                 toolbar_button_size_y,
+                                 win32gui.LR_LOADFROMFILE)
+    win32gui.ImageList_Add(hImageList, hBitmap, 0)
+
     win32gui.ShowWindow(hWndToolbar, win32con.SW_SHOWNORMAL)
+
+    ToolbarButton().store_hWndToolbar(hWndToolbar=hWndToolbar)
 
     thread_scanner = threading.Thread(target=screen_bitmap_scanner_thread, args=(hWndApp,))
     thread_scanner.daemon = True
@@ -666,6 +771,9 @@ def wndproc(hWndApp, message, wParam, lParam):
         # Toolbar button [3] SERVERS when pressed
         if wParam == 13:
             ToolbarButton().toggleshow(title=servers_popup_title)
+        # Toolbar button [3] SERVERS when pressed
+        if wParam == 14:
+            ToolbarButton().toggledaynight(tbbut_id=14)
 
         # POPUP WINDOWS events
         # CLOCK [1]

@@ -21,7 +21,7 @@
 "serverspopup rect 2 line" : [745, 645],
 "toolbar width" : 45,
 "toolbar height" : 45,
-"toolbar images" : {"clock":"resources/tbq.bmp", "cmd":"resources/tbc.bmp", "servers":"resources/tbs.bmp"},
+"toolbar images" : {"clock":"resources/tbq.bmp", "cmd":"resources/tbc.bmp", "servers":"resources/tbs.bmp", "powercfg_default":"resources/tbp.bmp","powercfg_day":"resources/tbday.bmp", "powercfg_night":"resources/tbnight.bmp"},
 "app_window_refresher_thread_interval" : 0.8,
 "screen_bitmap_scanner_thread_interval" : 2,
 "pos x serverslist wnd" : 300,
