@@ -1,7 +1,7 @@
 VNapp
 ==============
 
-A tool for Videonet 8 admins.
+
 
 READ THIS FIRST
 ---------------
